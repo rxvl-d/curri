@@ -1,0 +1,10 @@
+trafilatura
+pandas
+sklearn
+scipy
+readabilipy
+xgboost
+jupyter
+yake
+bs4
+tqdm
