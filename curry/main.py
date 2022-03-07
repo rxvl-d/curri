@@ -1,4 +1,7 @@
 import sys
+
+from tqdm import tqdm
+
 sys.path.append('.')
 
 import argparse
@@ -21,7 +24,7 @@ class Runner:
             ('xgbClassifier', (0.04,)),
             ('xgbClassifier', (0.05,))
         ]
-        return self.pool.map(self.trainer.train_score, models)
+        return list(tqdm(self.pool.imap(self.trainer.train_score, models), total=len(models)))
 
 def parse():
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
