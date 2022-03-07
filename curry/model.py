@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
 import numpy as np
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.metrics import accuracy_score
@@ -22,6 +25,7 @@ class Trainer:
     def __init__(self, data_dir):
         self.loader = Loader(data_dir)
         self.extractor = Extractor()
+        self.logger = logging.getLogger(__name__)
 
     def get_X_y(self):
         df = self.loader.sublessons_w_content()
@@ -30,6 +34,7 @@ class Trainer:
         return X, y
 
     def train_score(self, model_desc):
+        self.logger.info(f"train_score: {model_desc}")
         (model_name, args) = model_desc
         clf = getattr(Models, model_name)(*args)
         X, y = self.get_X_y()
