@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 import yake
 from scipy.sparse import hstack
 from sklearn.feature_extraction.text import CountVectorizer
