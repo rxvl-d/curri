@@ -1,10 +1,9 @@
 import logging
+
 import numpy as np
-from sklearn.feature_selection import VarianceThreshold
+import xgboost as xgb
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
-from sklearn.pipeline import Pipeline
-import xgboost as xgb
 
 from curry.features import Extractor
 from curry.loader import Loader
@@ -24,17 +23,19 @@ class _XGBClassifier:
 
 
 class Models:
-    xgb_params = {'max_depth': 4,
-                  'use_label_encoder': False,
-                  'objective': 'multi:softmax',
-                  'eval_metric': 'merror',
-                  'seed': 42,
-                  'nthread': 20,
-                  'num_class': 9}
+    @classmethod
+    def xgb_params(self, nthreads):
+        return {'max_depth': 4,
+                'use_label_encoder': False,
+                'objective': 'multi:softmax',
+                'eval_metric': 'merror',
+                'seed': 42,
+                'nthread': nthreads,
+                'num_class': 9}
 
     @classmethod
-    def xgbClassifier(self):
-        return _XGBClassifier(Models.xgb_params)
+    def xgbClassifier(self, nthreads):
+        return _XGBClassifier(Models.xgb_params(nthreads))
 
 
 class Trainer:
