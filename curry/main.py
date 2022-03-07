@@ -18,7 +18,7 @@ class Runner:
 
     def run(self, model_conf):
         if len(model_conf) == 1:
-            return self.trainer.train_score(model_conf[0])
+            return [self.trainer.train_score(model_conf[0])]
         else:
             pool = Pool(self.n_par)
             return pool.map(self.trainer.train_score, model_conf)

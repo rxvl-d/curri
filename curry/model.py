@@ -69,4 +69,4 @@ class Trainer:
             else:
                 y_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
-        return np.mean(scores)
+        return model_desc, np.mean(scores)
