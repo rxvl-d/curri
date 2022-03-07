@@ -46,7 +46,7 @@ class Trainer:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             if type(clf) == xgb.XGBClassifier:
-                bst = clf.train({'max_depth':4,
+                bst = xgb.train({'max_depth':4,
                            'objective':'multi:softmax',
                            'eval_metric': 'merror',
                            'seed': 42,
