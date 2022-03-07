@@ -1,14 +1,11 @@
 import sys
-
-from tqdm import tqdm
-
 sys.path.append('.')
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 import argparse
-
-from curry.features import Extractor
-from curry.loader import Loader
-from curry.model import Trainer, Models
+from tqdm import tqdm
+from curry.model import Trainer
 from multiprocessing import Pool
 
 class Runner:
