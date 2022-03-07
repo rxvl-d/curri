@@ -4,6 +4,7 @@ from scipy.sparse import hstack
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
+from nltk.corpus import stopwords
 
 from curry.clean import Cleaner
 from curry.utils import cache_file
@@ -37,7 +38,7 @@ class Extractor:
 
     @cache_file('.tfidf.cache')
     def tfidf(self, contents):
-        vectorizer = TfidfVectorizer()
+        vectorizer = TfidfVectorizer(stop_words=stopwords.words('german'))
         return vectorizer.fit_transform(contents)
 
     def land_one_hot(self, lands):
