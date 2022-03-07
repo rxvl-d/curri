@@ -51,12 +51,10 @@ class Extractor:
             raise Exception("Boom!")
 
 class SentenceTransformer:
-    def __init__(self):
-        from sentence_transformers import SentenceTransformer
-        self.embedder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-
     @cache_file('.sentence_transformer.cache')
     def run(self, contents):
+        from sentence_transformers import SentenceTransformer
+        embedder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
         all_sentences = []
         sentence_mapping = []
         for i, content in enumerate(contents):
@@ -64,7 +62,7 @@ class SentenceTransformer:
             all_sentences += [s for s in content.split('.') if s.strip()]
             end_index = len(all_sentences)
             sentence_mapping.append((i, (start_index, end_index)))
-        return self.embedder.encode(all_sentences), sentence_mapping
+        return embedder.encode(all_sentences), sentence_mapping
 
     def doc_vecs(self, run_outs):
         sentence_vecs, mapping = run_outs
