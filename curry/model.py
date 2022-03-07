@@ -11,16 +11,24 @@ from curry.loader import Loader
 
 
 class Models:
+    xgb_params = {'max_depth':4,
+                           'use_label_encoder':False,
+                           'objective':'multi:softmax',
+                           'eval_metric': 'merror',
+                           'seed': 42,
+                           'nthread': 20,
+                           'num_class': 9}
+
     @classmethod
     def xgbClassifier(self, variance_threshold):
         return Pipeline([
             ('variance_threshold', VarianceThreshold(threshold=variance_threshold)),
-            ('classification', xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'))
+            ('classification', xgb.XGBClassifier(**Models.xgb_params))
         ])
 
     @classmethod
     def xgbClassifierNoSelection(self):
-        return xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+        return xgb.XGBClassifier(**Models.xgb_params)
 
 
 class Trainer:
@@ -57,7 +65,7 @@ class Trainer:
             else:
                 clf.fit(X_train, y_train)
             if type(clf) == xgb.XGBClassifier:
-                y_pred = bst.predict(X_test)
+                y_pred = bst.predict(xgb.DMatrix(X_test, label=y_test))
             else:
                 y_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
