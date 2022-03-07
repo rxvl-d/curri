@@ -6,13 +6,17 @@ from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 from nltk.corpus import stopwords
 
+from curry.babelfy import Babelfier
 from curry.clean import Cleaner
 from curry.utils import cache_file
+from curry.wikifier import Wikifier
 
 
 class Extractor:
     def __init__(self, cleaner='tf'):
         self.cleaner = Cleaner(cleaner)
+        self.wikifier = Wikifier()
+        self.babelfier = Babelfier()
 
     @cache_file('.cleaned.cache')
     def cleaned_content(self, contents):
@@ -23,11 +27,15 @@ class Extractor:
         sorted_kws = sorted(ranked_kws, key=lambda x: x[1], reverse=True)
         return [kw for (kw, _) in sorted_kws]
 
+    def count_vectorize(self, keywords):
+        vectorizer = CountVectorizer(lowercase=False, tokenizer=lambda x: x)
+        return vectorizer.fit_transform(keywords)
+
     @cache_file('.keywords.cache')
     def keywords(self, contents):
-        vectorizer = CountVectorizer(lowercase=False, tokenizer=lambda x: x)
-        kws = [self.to_kws(c) for c in tqdm(self.cleaned_content(contents), desc='keyword ex.')]
-        return vectorizer.fit_transform(kws)
+        return self.count_vectorize([
+            self.to_kws(c) for c in tqdm(self.cleaned_content(contents), desc='keyword ex.')
+        ])
 
     @cache_file('.doc_vecs.cache')
     def sentence_transformers(self, contents):
@@ -42,6 +50,20 @@ class Extractor:
         out = vectorizer.fit_transform(contents)
         return out
 
+    @cache_file('.babelfier.cache')
+    def babelfy_kws(self, contents):
+        threshold = 0.5
+        return self.count_vectorize(
+            [[a['babelSynsetID'] for a in self.babelfier.bab(t) if a['score'] > threshold]
+             for t in tqdm(self.cleaned_content(contents), desc='babelfy')])
+
+    @cache_file('.wikifier.cache')
+    def wikifier_kws(self, contents):
+        threshold = 0.01
+        return self.count_vectorize(
+            [[a['title'] for a in self.wikifier.wikify(t)['annotations'] if a['pageRank'] > threshold]
+             for t in tqdm(self.cleaned_content(contents), desc='wikifier')])
+
     def land_one_hot(self, lands):
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
@@ -50,6 +72,12 @@ class Extractor:
         land_vec_sparse = self.land_one_hot(lands)
         if vec_type == 'kw':
             content_vec = self.keywords(contents)
+            return hstack([content_vec, land_vec_sparse]).tocsr()
+        if vec_type == 'babel_kw':
+            content_vec = self.babelfy_kws(contents)
+            return hstack([content_vec, land_vec_sparse]).tocsr()
+        if vec_type == 'wiki_kw':
+            content_vec = self.wikifier_kws(contents)
             return hstack([content_vec, land_vec_sparse]).tocsr()
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(contents)
