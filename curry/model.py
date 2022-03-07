@@ -18,8 +18,9 @@ class _XGBClassifier:
     def fit(self, X, y):
         self.bst = xgb.train(self.params, xgb.DMatrix(X, label=y))
 
-    def predict(self, X):
-        self.bst.predict(xgb.DMatrix(X))
+    def score(self, X, y):
+        y_pred = self.bst.predict(xgb.DMatrix(X, label=y))
+        return accuracy_score(y, y_pred)
 
 
 class Models:
@@ -59,6 +60,6 @@ class Trainer:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
-            y_pred = clf.predict(X_test)
-            scores.append(accuracy_score(y_test, y_pred))
+            score = clf.score(X_test, y_test)
+            scores.append(score)
         return model_desc, np.mean(scores)
