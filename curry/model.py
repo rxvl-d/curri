@@ -11,26 +11,24 @@ from curry.loader import Loader
 
 
 class Models:
-    @classmethod
-    def xgb_params(self, nthread):
-        return {'max_depth':4,
-                   'use_label_encoder':False,
-                   'objective':'multi:softmax',
-                   'eval_metric': 'merror',
-                   'seed': 42,
-                   'nthread': nthread,
-                   'num_class': 9}
+    xgb_params = {'max_depth':4,
+                           'use_label_encoder':False,
+                           'objective':'multi:softmax',
+                           'eval_metric': 'merror',
+                           'seed': 42,
+                           'nthread': 20,
+                           'num_class': 9}
 
     @classmethod
-    def xgbClassifier(self, variance_threshold, nthread):
+    def xgbClassifier(self, variance_threshold):
         return Pipeline([
             ('variance_threshold', VarianceThreshold(threshold=variance_threshold)),
-            ('classification', xgb.XGBClassifier(**Models.xgb_params(nthread)))
+            ('classification', xgb.XGBClassifier(**Models.xgb_params))
         ])
 
     @classmethod
-    def xgbClassifierNoSelection(self, nthread):
-        return xgb.XGBClassifier(**Models.xgb_params(nthread))
+    def xgbClassifierNoSelection(self):
+        return xgb.XGBClassifier(**Models.xgb_params)
 
 
 class Trainer:
