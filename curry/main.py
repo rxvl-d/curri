@@ -1,6 +1,9 @@
+import json
 import sys
+
 sys.path.append('.')
 import logging
+
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 import argparse
@@ -8,28 +11,28 @@ from tqdm import tqdm
 from curry.model import Trainer
 from multiprocessing import Pool
 
+
 class Runner:
-    def __init__(self, n_par, data_dir):
+    def __init__(self, n_par=2, data_dir='../data'):
         self.pool = Pool(n_par)
         self.trainer = Trainer(data_dir)
 
-    def run(self):
-        models = [
-            ('xgbClassifier', (0.01,)),
-            ('xgbClassifier', (0.02,)),
-            ('xgbClassifier', (0.03,)),
-            ('xgbClassifier', (0.04,)),
-            ('xgbClassifier', (0.05,))
-        ]
-        return list(tqdm(self.pool.imap(self.trainer.train_score, models), total=len(models)))
+    def run(self, model_conf):
+        return self.pool.map(self.trainer.train_score, model_conf)
+
 
 def parse():
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
     parser.add_argument('n_par', type=int)
     parser.add_argument('data_dir', type=str)
-    return parser.parse_args()
+    parser.add_argument('model_conf', type=str)
+    args = parser.parse_args()
+    with open(args.model_conf) as f:
+        model_conf = json.load(f)
+    return args, model_conf
+
 
 if __name__ == '__main__':
-    args = parse()
-    for i in Runner(n_par=args.n_par, data_dir=args.data_dir).run():
+    args, model_conf = parse()
+    for i in Runner(n_par=args.n_par, data_dir=args.data_dir).run(model_conf):
         print(i)

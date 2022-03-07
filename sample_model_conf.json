@@ -1,0 +1,6 @@
+[
+  {"name": "xgbClassifier", "args": [0.01]},
+  {"name": "xgbClassifier", "args": [0.02]},
+  {"name": "xgbClassifier", "args": [0.03]},
+  {"name": "xgbClassifier", "args": [0.04]}
+]

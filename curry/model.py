@@ -32,7 +32,8 @@ class Trainer:
 
     def train_score(self, model_desc):
         logging.info(f"train_score: {model_desc}")
-        (model_name, args) = model_desc
+        model_name = model_desc['name']
+        args = model_desc['args']
         clf = getattr(Models, model_name)(*args)
         X, y = self.get_X_y()
         scores = []
