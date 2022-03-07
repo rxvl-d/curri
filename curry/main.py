@@ -38,4 +38,4 @@ def parse():
 if __name__ == '__main__':
     args, model_conf = parse()
     for i in Runner(n_par=args.n_par, data_dir=args.data_dir).run(model_conf):
-        print(i)
+        logging.info(str(i))
