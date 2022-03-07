@@ -37,5 +37,10 @@ def parse():
 
 if __name__ == '__main__':
     args, model_conf = parse()
-    for i in Runner(n_par=args.n_par, data_dir=args.data_dir).run(model_conf):
-        logging.info(str(i))
+    for model_desc, score in Runner(n_par=args.n_par, data_dir=args.data_dir).run(model_conf):
+        logging.info("="*40)
+        logging.info(str(model_desc))
+        logging.info("-"*40)
+        for score_type in score:
+            logging.info(f"Score type: {score_type}")
+            logging.info(f"Value:\n{score[score_type]}")

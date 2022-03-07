@@ -3,11 +3,33 @@ import logging
 import numpy as np
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 
 from curry.features import Extractor
 from curry.loader import Loader
+
+
+class Scorer:
+    confusion_matrix = 'confusion_matrix'
+    accuracy = 'accuracy'
+    all = [confusion_matrix, accuracy]
+
+    @classmethod
+    def score(self, y_true, y_pred):
+        return {
+            Scorer.confusion_matrix: confusion_matrix(y_true, y_pred),
+            Scorer.accuracy: accuracy_score(y_true, y_pred)
+        }
+
+    @classmethod
+    def aggregate(self, score_type, score_values):
+        if score_type == Scorer.confusion_matrix:
+            return np.sum(score_values)
+        elif score_type == Scorer.accuracy:
+            return np.mean(score_values)
+        else:
+            raise Exception("Unimplemented!")
 
 
 class _XGBClassifier:
@@ -20,8 +42,7 @@ class _XGBClassifier:
 
     def score(self, X, y):
         y_pred = self.bst.predict(xgb.DMatrix(X, label=y))
-        return accuracy_score(y, y_pred)
-
+        return Scorer.score(y, y_pred)
 
 class Models:
     @classmethod
@@ -54,6 +75,15 @@ class Trainer:
         y = df.klass.astype('category').cat.codes.values
         return X, y
 
+    def aggregate_scores(self, scores):
+        out = dict()
+        for score_type in Scorer.all:
+            score_values = []
+            for score in scores:
+                score_values.append(score[score_type])
+            out[score_type] = Scorer.aggregate(score_type, score_values)
+        return out
+
     def train_score(self, model_desc):
         logging.info(f"train_score: {model_desc}")
         model_name = model_desc['name']
@@ -69,4 +99,4 @@ class Trainer:
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test)
             scores.append(score)
-        return model_desc, np.mean(scores)
+        return model_desc, self.aggregate_scores(scores)
