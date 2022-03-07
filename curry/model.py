@@ -4,7 +4,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
+import xgboost as xgb
 
 from curry.features import Extractor
 from curry.loader import Loader
@@ -15,12 +15,12 @@ class Models:
     def xgbClassifier(self, variance_threshold):
         return Pipeline([
             ('variance_threshold', VarianceThreshold(threshold=variance_threshold)),
-            ('classification', XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'))
+            ('classification', xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'))
         ])
 
     @classmethod
     def xgbClassifierNoSelection(self):
-        return XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+        return xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
 
 
 class Trainer:
@@ -45,7 +45,20 @@ class Trainer:
         for train_index, test_index in folder.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            clf.fit(X_train, y_train)
-            y_pred = clf.predict(X_test)
+            if type(clf) == xgb.XGBClassifier:
+                bst = clf.train({'max_depth':4,
+                           'objective':'multi:softmax',
+                           'eval_metric': 'merror',
+                           'seed': 42,
+                           'nthread': 20,
+                           'num_class': 9},
+                          xgb.DMatrix(X_train, label=y_train),
+                          )
+            else:
+                clf.fit(X_train, y_train)
+            if type(clf) == xgb.XGBClassifier:
+                y_pred = bst.predict(X_test)
+            else:
+                y_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
         return np.mean(scores)
