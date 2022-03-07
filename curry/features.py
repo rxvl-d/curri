@@ -1,7 +1,7 @@
 import numpy as np
 import yake
 from scipy.sparse import hstack
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
@@ -35,6 +35,11 @@ class Extractor:
         assert len(out) == len(contents)
         return out
 
+    @cache_file('.tfidf.cache')
+    def tfidf(self, contents):
+        vectorizer = TfidfVectorizer()
+        return vectorizer.fit_transform(contents)
+
     def land_one_hot(self, lands):
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
@@ -47,6 +52,9 @@ class Extractor:
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(contents)
             return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
+        elif vec_type == 'tfidf':
+            content_vec = self.tfidf(contents)
+            return hstack([content_vec, land_vec_sparse]).todense()
         else:
             raise Exception("Boom!")
 
