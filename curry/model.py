@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import xgboost as xgb
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
@@ -36,6 +37,10 @@ class Models:
     @classmethod
     def xgbClassifier(self, nthreads):
         return _XGBClassifier(Models.xgb_params(nthreads))
+
+    @classmethod
+    def randomForest(self, n_estimators, n_jobs):
+        return RandomForestClassifier(n_estimators=100, n_jobs=n_jobs)
 
 
 class Trainer:

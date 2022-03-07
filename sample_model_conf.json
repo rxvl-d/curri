@@ -1,6 +1,4 @@
 [
-  {"name": "xgbClassifier", "args": [0.01]},
-  {"name": "xgbClassifier", "args": [0.02]},
-  {"name": "xgbClassifier", "args": [0.03]},
-  {"name": "xgbClassifier", "args": [0.04]}
+  {"name": "xgbClassifier", "args": [20]},
+  {"name": "randomForest", "args": [100, 10]}
 ]
