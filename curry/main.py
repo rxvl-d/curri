@@ -1,7 +1,7 @@
 import json
 import sys
 
-from curry.results import ConsoleWriter
+from curry.results import ConsoleWriter, FileWriter
 
 sys.path.append('.')
 import logging
