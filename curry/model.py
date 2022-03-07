@@ -25,7 +25,7 @@ class Scorer:
     @classmethod
     def aggregate(self, score_type, score_values):
         if score_type == Scorer.confusion_matrix:
-            return np.sum(score_values)
+            return np.sum(np.array(score_values), axis=0)
         elif score_type == Scorer.accuracy:
             return np.mean(score_values)
         else:

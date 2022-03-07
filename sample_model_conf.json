@@ -1,4 +1,3 @@
 [
-  {"name": "xgbClassifier", "args": [20], "vec_type":  "kw"},
-  {"name": "xgbClassifier", "args": [20], "vec_type":  "st"}
+  {"name": "xgbClassifier", "args": [20], "vec_type":  "tfidf"}
 ]

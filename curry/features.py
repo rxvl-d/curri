@@ -39,7 +39,8 @@ class Extractor:
     @cache_file('.tfidf.cache')
     def tfidf(self, contents):
         vectorizer = TfidfVectorizer(stop_words=stopwords.words('german'))
-        return vectorizer.fit_transform(contents)
+        out = vectorizer.fit_transform(contents)
+        return out
 
     def land_one_hot(self, lands):
         one_hot = OneHotEncoder()
@@ -49,13 +50,13 @@ class Extractor:
         land_vec_sparse = self.land_one_hot(lands)
         if vec_type == 'kw':
             content_vec = self.keywords(contents)
-            return hstack([content_vec, land_vec_sparse]).todense()
+            return hstack([content_vec, land_vec_sparse]).tocsr()
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(contents)
             return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
         elif vec_type == 'tfidf':
             content_vec = self.tfidf(contents)
-            return hstack([content_vec, land_vec_sparse]).todense()
+            return hstack([content_vec, land_vec_sparse]).tocsr()
         else:
             raise Exception("Boom!")
 
