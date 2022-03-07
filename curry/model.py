@@ -39,8 +39,8 @@ class Models:
         return _XGBClassifier(Models.xgb_params(nthreads))
 
     @classmethod
-    def randomForest(self, n_estimators, n_jobs):
-        return RandomForestClassifier(n_estimators=n_estimators, n_jobs=n_jobs)
+    def randomForest(self, n_estimators):
+        return RandomForestClassifier(n_estimators=n_estimators)
 
 
 class Trainer:
@@ -48,18 +48,19 @@ class Trainer:
         self.loader = Loader(data_dir)
         self.extractor = Extractor()
 
-    def get_X_y(self):
+    def get_X_y(self, vec_type):
         df = self.loader.sublessons_w_content()
-        X = self.extractor.join(df.content, df.land)
+        X = self.extractor.join(df.content, df.land, vec_type)
         y = df.klass.astype('category').cat.codes.values
         return X, y
 
     def train_score(self, model_desc):
         logging.info(f"train_score: {model_desc}")
         model_name = model_desc['name']
+        vec_type = model_desc['vec_type']
         args = model_desc['args']
         clf = getattr(Models, model_name)(*args)
-        X, y = self.get_X_y()
+        X, y = self.get_X_y(vec_type)
         scores = []
         folder = StratifiedKFold(n_splits=3)
         for train_index, test_index in folder.split(X, y):

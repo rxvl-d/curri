@@ -1,4 +1,4 @@
 [
-  {"name": "xgbClassifier", "args": [20]},
-  {"name": "randomForest", "args": [100, 10]}
+  {"name": "xgbClassifier", "args": [20], "vec_type":  "kw"},
+  {"name": "xgbClassifier", "args": [20], "vec_type":  "st"}
 ]
