@@ -1,8 +1,8 @@
-from functools import lru_cache
-
-import trafilatura
 import json
+
 import readabilipy
+import trafilatura
+
 
 class Cleaner:
     def __init__(self, cleaner_type):
