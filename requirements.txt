@@ -8,3 +8,4 @@ jupyter
 yake
 bs4
 tqdm
+xgboost

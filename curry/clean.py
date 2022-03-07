@@ -31,7 +31,6 @@ class Cleaner:
                 accepted_lines.append(line)
         return '. '.join(accepted_lines)
 
-    @lru_cache(maxsize=2000)
     def clean(self, html_content):
         if self.cleaner_type == 'tf':
             return self.remove_equations(self.trafilatura_lines(html_content))
