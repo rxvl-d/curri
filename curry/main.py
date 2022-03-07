@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+
 import argparse
 
 from curry.features import Extractor
