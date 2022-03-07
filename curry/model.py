@@ -40,7 +40,7 @@ class Models:
 
     @classmethod
     def randomForest(self, n_estimators, n_jobs):
-        return RandomForestClassifier(n_estimators=100, n_jobs=n_jobs)
+        return RandomForestClassifier(n_estimators=n_estimators, n_jobs=n_jobs)
 
 
 class Trainer:
