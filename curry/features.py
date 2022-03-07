@@ -35,3 +35,18 @@ class Extractor:
 
     def join(self, contents, lands):
         return hstack([self.keywords(contents), self.land_one_hot(lands)]).todense()
+
+class SentenceTransformer:
+    def __init__(self):
+        from sentence_transformers import SentenceTransformer
+        self.embedder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
+    def run(self, contents):
+        all_sentences = []
+        sentence_mapping = []
+        for i, content in enumerate(contents):
+            start_index = len(all_sentences)
+            all_sentences += [s for s in content.split('.') if s.strip()]
+            end_index = len(all_sentences)
+            sentence_mapping.append((i, (start_index, end_index)))
+        return self.embedder.encode(all_sentences), sentence_mapping
