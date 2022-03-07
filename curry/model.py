@@ -19,8 +19,8 @@ class Models:
 
 
 class Trainer:
-    def __init__(self):
-        self.loader = Loader()
+    def __init__(self, data_dir):
+        self.loader = Loader(data_dir)
         self.extractor = Extractor()
 
     def get_X_y(self):
