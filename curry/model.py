@@ -10,6 +10,17 @@ from curry.features import Extractor
 from curry.loader import Loader
 
 
+class _XGBClassifier:
+    def __init__(self, params):
+        self.bst = None
+        self.params = params
+
+    def fit(self, X, y):
+        self.bst = xgb.train(self.params, xgb.DMatrix(X, label=y))
+
+    def predict(self, X):
+        self.bst.predict(xgb.DMatrix(X))
+
 class Models:
     xgb_params = {'max_depth':4,
                            'use_label_encoder':False,
@@ -20,15 +31,8 @@ class Models:
                            'num_class': 9}
 
     @classmethod
-    def xgbClassifier(self, variance_threshold):
-        return Pipeline([
-            ('variance_threshold', VarianceThreshold(threshold=variance_threshold)),
-            ('classification', xgb.XGBClassifier(**Models.xgb_params))
-        ])
-
-    @classmethod
-    def xgbClassifierNoSelection(self):
-        return xgb.XGBClassifier(**Models.xgb_params)
+    def xgbClassifier(self):
+        return _XGBClassifier(**Models.xgb_params)
 
 
 class Trainer:
@@ -53,20 +57,7 @@ class Trainer:
         for train_index, test_index in folder.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            if type(clf) == xgb.XGBClassifier:
-                bst = xgb.train({'max_depth':4,
-                           'objective':'multi:softmax',
-                           'eval_metric': 'merror',
-                           'seed': 42,
-                           'nthread': 20,
-                           'num_class': 9},
-                          xgb.DMatrix(X_train, label=y_train),
-                          )
-            else:
-                clf.fit(X_train, y_train)
-            if type(clf) == xgb.XGBClassifier:
-                y_pred = bst.predict(xgb.DMatrix(X_test, label=y_test))
-            else:
-                y_pred = clf.predict(X_test)
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
         return model_desc, np.mean(scores)
