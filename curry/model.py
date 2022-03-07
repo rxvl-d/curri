@@ -32,7 +32,7 @@ class Models:
 
     @classmethod
     def xgbClassifier(self):
-        return _XGBClassifier(**Models.xgb_params)
+        return _XGBClassifier(Models.xgb_params)
 
 
 class Trainer:
@@ -58,6 +58,6 @@ class Trainer:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
-            y_pred = clf.predict(X_test)
+            Zy_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
         return model_desc, np.mean(scores)
