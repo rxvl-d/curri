@@ -10,4 +10,4 @@ bs4
 tqdm
 xgboost
 sentence-transformers
-
+nltk
