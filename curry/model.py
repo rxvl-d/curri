@@ -18,6 +18,10 @@ class Models:
             ('classification', XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'))
         ])
 
+    @classmethod
+    def xgbClassifierNoSelection(self):
+        return XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+
 
 class Trainer:
     def __init__(self, data_dir):
