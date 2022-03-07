@@ -13,11 +13,15 @@ from multiprocessing import Pool
 
 class Runner:
     def __init__(self, n_par=2, data_dir='../data'):
-        self.pool = Pool(n_par)
+        self.n_par = n_par
         self.trainer = Trainer(data_dir)
 
     def run(self, model_conf):
-        return self.pool.map(self.trainer.train_score, model_conf)
+        if len(model_conf) == 1:
+            return self.trainer.train_score(model_conf[0])
+        else:
+            pool = Pool(self.n_par)
+            return pool.map(self.trainer.train_score, model_conf)
 
 
 def parse():
