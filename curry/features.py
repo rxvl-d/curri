@@ -1,3 +1,4 @@
+import numpy as np
 import yake
 from scipy.sparse import hstack
 from sklearn.feature_extraction.text import CountVectorizer
@@ -27,18 +28,34 @@ class Extractor:
         kws = [self.to_kws(c) for c in tqdm(self.cleaned_content(contents), desc='keyword ex.')]
         return vectorizer.fit_transform(kws)
 
+    @cache_file('.doc_vecs.cache')
+    def sentence_transformers(self, contents):
+        st = SentenceTransformer()
+        out = np.array(st.doc_vecs(st.run()))
+        assert len(out) == len(contents)
+        return out
+
     def land_one_hot(self, lands):
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
 
-    def join(self, contents, lands):
-        return hstack([self.keywords(contents), self.land_one_hot(lands)]).todense()
+    def join(self, contents, lands, vec_type):
+        land_vec_sparse = self.land_one_hot(lands)
+        if vec_type == 'kw':
+            content_vec = self.keywords(contents)
+            return hstack([content_vec, land_vec_sparse]).todense()
+        elif vec_type == 'st':
+            content_vec = self.sentence_transformers(contents)
+            return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
+        else:
+            raise Exception("Boom!")
 
 class SentenceTransformer:
     def __init__(self):
         from sentence_transformers import SentenceTransformer
         self.embedder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
+    @cache_file('.sentence_transformer.cache')
     def run(self, contents):
         all_sentences = []
         sentence_mapping = []
@@ -48,3 +65,10 @@ class SentenceTransformer:
             end_index = len(all_sentences)
             sentence_mapping.append((i, (start_index, end_index)))
         return self.embedder.encode(all_sentences), sentence_mapping
+
+    def doc_vecs(self, run_outs):
+        sentence_vecs, mapping = run_outs
+        vecs = []
+        for (idx, (start, end)) in mapping:
+            vecs.append(np.mean(sentence_vecs[start:end, :], axis=0))
+        return vecs
