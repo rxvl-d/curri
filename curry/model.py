@@ -21,14 +21,15 @@ class _XGBClassifier:
     def predict(self, X):
         self.bst.predict(xgb.DMatrix(X))
 
+
 class Models:
-    xgb_params = {'max_depth':4,
-                           'use_label_encoder':False,
-                           'objective':'multi:softmax',
-                           'eval_metric': 'merror',
-                           'seed': 42,
-                           'nthread': 20,
-                           'num_class': 9}
+    xgb_params = {'max_depth': 4,
+                  'use_label_encoder': False,
+                  'objective': 'multi:softmax',
+                  'eval_metric': 'merror',
+                  'seed': 42,
+                  'nthread': 20,
+                  'num_class': 9}
 
     @classmethod
     def xgbClassifier(self):
@@ -58,6 +59,6 @@ class Trainer:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
-            Zy_pred = clf.predict(X_test)
+            y_pred = clf.predict(X_test)
             scores.append(accuracy_score(y_test, y_pred))
         return model_desc, np.mean(scores)
