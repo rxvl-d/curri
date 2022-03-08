@@ -32,7 +32,20 @@ class Loader:
             return f.read()
 
     @lru_cache(maxsize=1)
-    def sublessons_w_content(self):
+    def sublessons_w_content(self, filter_multi_grade):
         df = self.sublessons()
+        if filter_multi_grade:
+            klass_range_agg = df.groupby(['land', 'url']).klass.apply(lambda s: s.max() - s.min())
+            lessons_in_specific_grades = klass_range_agg[klass_range_agg <= 2].index
+            filtered = df[df[['land', 'url']].apply(tuple, axis=1).isin(lessons_in_specific_grades)]
+            # NOTE: since just returning the filtered DF right now would not result in the desired effect
+            # of filtering features (due to caching), I"m returning ilcos and actual feature filtering
+            # can happen later. Should be removable once the caches are cleared.
+            selected_ilocs = []
+            for idx in filtered.index:
+                iloc = df.index.get_loc(idx)
+                selected_ilocs.append(iloc)
+        else:
+            selected_ilocs = None
         df['content'] = df.grundwissen_url.apply(self.read_file)
-        return df
+        return df, selected_ilocs

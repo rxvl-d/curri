@@ -65,15 +65,19 @@ class Models:
 
 
 class Trainer:
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, filter_multi_grade):
+        self.filter_multi_grade = filter_multi_grade
         self.loader = Loader(data_dir)
         self.extractor = Extractor()
 
     def get_X_y(self, vec_type):
-        df = self.loader.sublessons_w_content()
+        df, selected_ilocs = self.loader.sublessons_w_content(self.filter_multi_grade)
         X = self.extractor.join(df.content, df.land, vec_type)
         y = df.klass.astype('category').cat.codes.values
-        return X, y
+        if selected_ilocs:
+            return X[selected_ilocs], y[selected_ilocs]
+        else:
+            return X, y
 
     def aggregate_scores(self, scores):
         out = dict()
