@@ -130,7 +130,7 @@ class Models:
         return _XGBClassifier(params)
 
     @classmethod
-    def xgbOrdinalClassifer(self, nthreads):
+    def xgbOrdinalClassifier(self, nthreads):
         params = Models.xgb_params(nthreads)
         params['objective'] = 'binary:logistic'
         params['eval_metric'] = 'error'
