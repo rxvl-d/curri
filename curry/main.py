@@ -9,8 +9,7 @@ from curry.results import ConsoleWriter, FileWriter
 
 
 class Runner:
-    def __init__(self, n_par=2, data_dir='../data', filter_multi_grade=False):
-        self.n_par = n_par
+    def __init__(self, data_dir='../data', filter_multi_grade=False):
         self.trainer = Trainer(data_dir, filter_multi_grade)
 
     def run(self, model_conf):
@@ -31,7 +30,6 @@ def parse():
 if __name__ == '__main__':
     args, model_conf = parse()
     results = Runner(
-        n_par=args.n_par,
         data_dir=args.data_dir,
         filter_multi_grade=args.filter_multi_grade
     ).run(model_conf)
