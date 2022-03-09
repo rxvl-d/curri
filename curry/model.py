@@ -5,6 +5,7 @@ import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
+from sklearn.multioutput import MultiOutputClassifier
 
 from curry.features import Extractor
 from curry.loader import Loader
@@ -35,6 +36,18 @@ class Scorer:
 class _XGBClassifier:
     def __init__(self, params):
         self.clf = xgb.XGBClassifier(**params)
+
+    def fit(self, X, y):
+        self.clf.fit(X, y)
+
+    def score(self, X, y):
+        y_pred = self.clf.predict(X)
+        return Scorer.score(y, y_pred)
+
+
+class _XGBMultilabelClassifer:
+    def __init__(self, params):
+        self.clf = MultiOutputClassifier(xgb.XGBClassifier(**params))
 
     def fit(self, X, y):
         self.clf.fit(X, y)
@@ -106,6 +119,13 @@ class Models:
         params['objective'] = 'binary:logistic'
         params['eval_metric'] = 'error'
         return _XGBOrdinalClassifer(params)
+
+    @classmethod
+    def xgbMultilabelClassifer(self, nthreads):
+        params = Models.xgb_params(nthreads)
+        params['objective'] = 'binary:logistic'
+        params['eval_metric'] = 'error'
+        return _XGBMultilabelClassifer(params)
 
     @classmethod
     def randomForest(self, n_estimators):
