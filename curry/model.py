@@ -34,30 +34,78 @@ class Scorer:
 
 class _XGBClassifier:
     def __init__(self, params):
-        self.bst = None
-        self.params = params
+        self.clf = xgb.XGBClassifier(**params)
 
     def fit(self, X, y):
-        self.bst = xgb.train(self.params, xgb.DMatrix(X, label=y))
+        self.clf.fit(X, y)
 
     def score(self, X, y):
-        y_pred = self.bst.predict(xgb.DMatrix(X, label=y))
+        y_pred = self.clf.predict(X)
         return Scorer.score(y, y_pred)
+
+
+class _XGBOrdinalClassifer:
+    # Code from https://stackoverflow.com/questions/57561189/multi-class-multi-label-ordinal-classification-with-sklearn
+    def __init__(self, params):
+        self.params = params
+        self.clf = xgb.XGBClassifier
+        self.clfs = {}
+
+    def fit(self, X, y):
+        self.unique_class = np.sort(np.unique(y))
+        if self.unique_class.shape[0] > 2:
+            for i in range(self.unique_class.shape[0] - 1):
+                # for each k - 1 ordinal value we fit a binary classification problem
+                binary_y = (y > self.unique_class[i]).astype(np.uint8)
+                clf = self.clf(**self.params)
+                clf.fit(X, binary_y)
+                self.clfs[i] = clf
+
+    def predict_proba(self, X):
+        clfs_predict = {k: self.clfs[k].predict_proba(X) for k in self.clfs}
+        predicted = []
+        for i, y in enumerate(self.unique_class):
+            if i == 0:
+                # V1 = 1 - Pr(y > V1)
+                predicted.append(1 - clfs_predict[i][:, 1])
+            elif i in clfs_predict:
+                # Vi = Pr(y > Vi-1) - Pr(y > Vi)
+                predicted.append(clfs_predict[i - 1][:, 1] - clfs_predict[i][:, 1])
+            else:
+                # Vk = Pr(y > Vk-1)
+                predicted.append(clfs_predict[i - 1][:, 1])
+        return np.vstack(predicted).T
+
+    def predict(self, X):
+        return np.argmax(self.predict_proba(X), axis=1)
+
+    def score(self, X, y):
+        _, indexed_y = np.unique(y, return_inverse=True)
+        return Scorer.score(indexed_y, self.predict(X))
+
 
 class Models:
     @classmethod
     def xgb_params(self, nthreads):
         return {'max_depth': 4,
                 'use_label_encoder': False,
-                'objective': 'multi:softmax',
-                'eval_metric': 'merror',
                 'seed': 42,
-                'nthread': nthreads,
-                'num_class': 9}
+                'nthread': nthreads}
 
     @classmethod
     def xgbClassifier(self, nthreads):
-        return _XGBClassifier(Models.xgb_params(nthreads))
+        params = Models.xgb_params(nthreads)
+        params['num_class'] = 9
+        params['objective'] = 'multi:softmax'
+        params['eval_metric'] = 'merror'
+        return _XGBClassifier(params)
+
+    @classmethod
+    def xgbOrdinalClassifer(self, nthreads):
+        params = Models.xgb_params(nthreads)
+        params['objective'] = 'binary:logistic'
+        params['eval_metric'] = 'error'
+        return _XGBOrdinalClassifer(params)
 
     @classmethod
     def randomForest(self, n_estimators):
