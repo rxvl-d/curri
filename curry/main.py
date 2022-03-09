@@ -12,8 +12,11 @@ class Runner:
     def __init__(self, data_dir='../data', filter_multi_grade=False):
         self.trainer = Trainer(data_dir, filter_multi_grade)
 
-    def run(self, model_conf):
-        return list(map(self.trainer.train_score, model_conf))
+    def run(self, model_confs):
+        for model_conf in model_confs:
+            result = self.trainer.train_score(model_conf)
+            ConsoleWriter.write(model_conf, result)
+            yield model_conf, result
 
 
 def parse():
@@ -33,5 +36,4 @@ if __name__ == '__main__':
         data_dir=args.data_dir,
         filter_multi_grade=args.filter_multi_grade
     ).run(model_conf)
-    ConsoleWriter.write(results)
-    FileWriter.write(results)
+    FileWriter.write(list(results))

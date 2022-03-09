@@ -151,4 +151,4 @@ class Trainer:
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test)
             scores.append(score)
-        return model_desc, self.aggregate_scores(scores)
+        return self.aggregate_scores(scores)

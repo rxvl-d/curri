@@ -6,14 +6,13 @@ from curry.model import Scorer
 
 class ConsoleWriter:
     @classmethod
-    def write(cls, results):
-        for model_desc, score in results:
-            logging.info("=" * 40)
-            logging.info(str(model_desc))
-            logging.info("-" * 40)
-            for score_type in score:
-                logging.info(f"Score type: {score_type}")
-                logging.info(f"Value:\n{score[score_type]}")
+    def write(cls, model_desc, score):
+        logging.info("=" * 40)
+        logging.info(str(model_desc))
+        logging.info("-" * 40)
+        for score_type in score:
+            logging.info(f"Score type: {score_type}")
+            logging.info(f"Value:\n{score[score_type]}")
 
 class FileWriter:
     @classmethod
