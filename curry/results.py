@@ -16,15 +16,17 @@ class ConsoleWriter:
 
 class FileWriter:
     @classmethod
-    def result_file_name(cls, model_desc):
-        return f'{model_desc["name"]}_{model_desc["vec_type"]}_{"-".join([str(i) for i in model_desc["args"]])}'
+    def result_file_name(cls, model_desc, multi_grade_filtered):
+        return f'{model_desc["name"]}_{model_desc["vec_type"]}' +\
+                ('_multi_grade_filtered' if multi_grade_filtered else '') +\
+               f'_{"-".join([str(i) for i in model_desc["args"]])}'
 
     @classmethod
-    def write(cls, results):
+    def write(cls, results, multi_grade_filtered):
         if not os.path.isdir('results'):
             os.mkdir('results')
         for model_desc, score in results:
-            with open('results/' + cls.result_file_name(model_desc) + ".confusion_matrix", 'w') as f:
+            with open('results/' + cls.result_file_name(model_desc, multi_grade_filtered) + ".confusion_matrix", 'w') as f:
                 f.write(str(score[Scorer.confusion_matrix]))
         accuracies = [(cls.result_file_name(model_desc), score[Scorer.accuracy]) for model_desc, score in results]
         with open("results/accuracies", 'a') as f:

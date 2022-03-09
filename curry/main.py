@@ -36,4 +36,4 @@ if __name__ == '__main__':
         data_dir=args.data_dir,
         filter_multi_grade=args.filter_multi_grade
     ).run(model_conf)
-    FileWriter.write(list(results))
+    FileWriter.write(list(results), args.filter_multi_grade)
