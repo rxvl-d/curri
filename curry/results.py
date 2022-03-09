@@ -28,7 +28,7 @@ class FileWriter:
         for model_desc, score in results:
             with open('results/' + cls.result_file_name(model_desc, multi_grade_filtered) + ".confusion_matrix", 'w') as f:
                 f.write(str(score[Scorer.confusion_matrix]))
-        accuracies = [(cls.result_file_name(model_desc), score[Scorer.accuracy]) for model_desc, score in results]
+        accuracies = [(cls.result_file_name(model_desc, multi_grade_filtered), score[Scorer.accuracy]) for model_desc, score in results]
         with open("results/accuracies", 'a') as f:
             for model_name, acc in accuracies:
                 f.write(f"{model_name}\t{acc}\n")
