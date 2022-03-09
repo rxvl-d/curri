@@ -6,7 +6,6 @@ import json
 import argparse
 from curry.model import Trainer
 from curry.results import ConsoleWriter, FileWriter
-from multiprocessing import Pool
 
 
 class Runner:
@@ -15,16 +14,11 @@ class Runner:
         self.trainer = Trainer(data_dir, filter_multi_grade)
 
     def run(self, model_conf):
-        if len(model_conf) == 1:
-            return [self.trainer.train_score(model_conf[0])]
-        else:
-            pool = Pool(self.n_par)
-            return pool.map(self.trainer.train_score, model_conf)
+        return list(map(self.trainer.train_score, model_conf))
 
 
 def parse():
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
-    parser.add_argument('n_par', type=int)
     parser.add_argument('data_dir', type=str)
     parser.add_argument('model_conf', type=str)
     parser.add_argument('--filter_multi_grade', action='store_true', default=False)
