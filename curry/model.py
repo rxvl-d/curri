@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.multioutput import MultiOutputClassifier
+from sklearn.preprocessing import KBinsDiscretizer
 
 from curry.features import Extractor
 from curry.loader import Loader
@@ -55,6 +56,21 @@ class _XGBMultilabelClassifer:
     def score(self, X, y):
         y_pred = self.clf.predict(X)
         return Scorer.score(y, y_pred)
+
+class _XGBCoarseGrained:
+    def __init__(self, params, bins):
+        self.clf = xgb.XGBClassifier(**params)
+        self.binner = KBinsDiscretizer(n_bins=bins, encode='ordinal')
+
+    def coarsify(self, y):
+        return self.binner.fit_transform(y.reshape((-1, 1)))
+
+    def fit(self, X, y):
+        self.clf.fit(X, self.coarsify(y))
+
+    def score(self, X, y):
+        y_pred = self.clf.predict(X)
+        return Scorer.score(self.coarsify(y), y_pred)
 
 
 class _XGBOrdinalClassifer:
@@ -126,6 +142,13 @@ class Models:
         params['objective'] = 'binary:logistic'
         params['eval_metric'] = 'error'
         return _XGBMultilabelClassifer(params)
+
+    @classmethod
+    def xgbCoarseGrainedClassifier(self, nthreads):
+        params = Models.xgb_params(nthreads)
+        params['objective'] = 'multi:softmax'
+        params['eval_metric'] = 'merror'
+        return _XGBCoarseGrained(params, bins=3)
 
     @classmethod
     def randomForest(self, n_estimators):
