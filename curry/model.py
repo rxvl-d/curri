@@ -201,4 +201,4 @@ class Trainer:
             return self.aggregate_scores(scores)
         except Exception as e:
             logging.error(e)
-            Scorer.empty
+            return Scorer.empty
