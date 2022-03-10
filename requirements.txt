@@ -13,3 +13,4 @@ sentence-transformers
 nltk
 backoff
 babelpy
+pytest

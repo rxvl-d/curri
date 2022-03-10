@@ -1,6 +1,8 @@
 import sys
+
 sys.path.append('.')
 import logging
+
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 import json
 import argparse
@@ -19,19 +21,23 @@ class Runner:
             yield job_desc, result
 
 
-def parse():
+def parse(args):
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
     parser.add_argument('data_dir', type=str)
     parser.add_argument('job_desc', type=str)
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     with open(args.job_desc) as f:
         job_descs = json.load(f)
     return args, job_descs
 
 
-if __name__ == '__main__':
-    args, job_descs = parse()
+def main(args):
+    parsed_args, job_descs = parse(args)
     results = Runner(
-        data_dir=args.data_dir
+        data_dir=parsed_args.data_dir
     ).run(job_descs)
     FileWriter.write(list(results))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
