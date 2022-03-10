@@ -156,13 +156,12 @@ class Models:
 
 
 class Trainer:
-    def __init__(self, data_dir, filter_multi_grade):
-        self.filter_multi_grade = filter_multi_grade
+    def __init__(self, data_dir):
         self.loader = Loader(data_dir)
         self.extractor = Extractor()
 
-    def get_X_y(self, vec_type):
-        df, selected_ilocs = self.loader.sublessons_w_content(self.filter_multi_grade)
+    def get_X_y(self, vec_type, filter_multi_grade):
+        df, selected_ilocs = self.loader.sublessons_w_content(filter_multi_grade)
         X = self.extractor.join(df.content, df.land, vec_type)
         y = df.klass.astype('category').cat.codes.values
         if selected_ilocs:
@@ -179,13 +178,14 @@ class Trainer:
             out[score_type] = Scorer.aggregate(score_type, score_values)
         return out
 
-    def train_score(self, model_desc):
-        logging.info(f"train_score: {model_desc}")
-        model_name = model_desc['name']
-        vec_type = model_desc['vec_type']
-        args = model_desc['args']
+    def train_score(self, job_desc):
+        logging.info(f"train_score: {job_desc}")
+        model_name = job_desc['name']
+        vec_type = job_desc['vec_type']
+        filter_multi_grade = job_desc['filtered']
+        args = job_desc['args']
         clf = getattr(Models, model_name)(*args)
-        X, y = self.get_X_y(vec_type)
+        X, y = self.get_X_y(vec_type, filter_multi_grade)
         scores = []
         folder = StratifiedKFold(n_splits=3)
         for train_index, test_index in folder.split(X, y):
