@@ -22,9 +22,9 @@ class Runner:
 def parse():
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
     parser.add_argument('data_dir', type=str)
-    parser.add_argument('model_conf', type=str)
+    parser.add_argument('job_desc', type=str)
     args = parser.parse_args()
-    with open(args.model_conf) as f:
+    with open(args.job_desc) as f:
         job_descs = json.load(f)
     return args, job_descs
 
