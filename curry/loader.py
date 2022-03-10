@@ -31,8 +31,7 @@ class Loader:
         with open(self.data_dir + 'grundwissen_pages/' + url.replace('/', 'SLASH')) as f:
             return f.read()
 
-    @lru_cache(maxsize=1)
-    def sublessons_w_content(self, filter_multi_grade):
+    def sublessons_w_content(self, filter_multi_grade, land):
         df = self.sublessons()
         if filter_multi_grade:
             klass_range_agg = df.groupby(['land', 'url']).klass.apply(lambda s: s.max() - s.min())
@@ -41,11 +40,21 @@ class Loader:
             # NOTE: since just returning the filtered DF right now would not result in the desired effect
             # of filtering features (due to caching), I"m returning ilcos and actual feature filtering
             # can happen later. Should be removable once the caches are cleared.
-            selected_ilocs = []
-            for idx in filtered.index:
-                iloc = df.index.get_loc(idx)
-                selected_ilocs.append(iloc)
+            selected_ilocs = self.get_ilocs_from_index(df.index, filtered.index)
         else:
             selected_ilocs = None
+
+        if land:
+            selected_land_ilocs = self.get_ilocs_from_index(df.index, df[df.land == land].index)
+        else:
+            selected_land_ilocs = None
+
         df['content'] = df.grundwissen_url.apply(self.read_file)
-        return df, selected_ilocs
+        return df, selected_ilocs, selected_land_ilocs
+
+    def get_ilocs_from_index(self, source_index, filtered_index):
+        selected_ilocs = []
+        for idx in filtered_index:
+            iloc = source_index.get_loc(idx)
+            selected_ilocs.append(iloc)
+        return selected_ilocs

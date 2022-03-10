@@ -98,8 +98,9 @@ class Extractor:
             vecs = [self.content_vecs(contents, v) for v in vec_type.split('+')]
         else:
             vecs = [self.content_vecs(contents, vec_type)]
-        land_vec_sparse = self.land_one_hot(lands)
-        vecs.append(land_vec_sparse)
+        if lands is not None:
+            land_vec_sparse = self.land_one_hot(lands)
+            vecs.append(land_vec_sparse)
         return self.concatenate_hetero_arrays(vecs)
 
 

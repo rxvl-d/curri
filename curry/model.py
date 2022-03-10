@@ -160,9 +160,10 @@ class Trainer:
         self.loader = Loader(data_dir)
         self.extractor = Extractor()
 
-    def get_X_y(self, vec_type, filter_multi_grade):
-        df, selected_ilocs = self.loader.sublessons_w_content(filter_multi_grade)
-        X = self.extractor.join(df.content, df.land, vec_type)
+    def get_X_y(self, vec_type, filter_multi_grade, land):
+        df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
+        selected_ilocs = list(set(selected_land_ilocs).intersection(selected_land_ilocs))
+        X = self.extractor.join(df.content, df.land if land else None, vec_type)
         y = df.klass.astype('category').cat.codes.values
         if selected_ilocs:
             return X[selected_ilocs], y[selected_ilocs]
@@ -184,8 +185,9 @@ class Trainer:
         vec_type = job_desc['vec_type']
         filter_multi_grade = job_desc['filtered']
         args = job_desc['args']
+        land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
-        X, y = self.get_X_y(vec_type, filter_multi_grade)
+        X, y = self.get_X_y(vec_type, filter_multi_grade, land)
         scores = []
         folder = StratifiedKFold(n_splits=3)
         for train_index, test_index in folder.split(X, y):

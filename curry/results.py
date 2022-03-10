@@ -30,4 +30,4 @@ class FileWriter:
 
 
 def result_file_name(job_desc):
-    return f'{job_desc["name"]}_{job_desc["vec_type"]}_{job_desc["filtered"]}'
+    return f'{job_desc["name"]}_{job_desc["vec_type"]}_{job_desc["filtered"]}_{job_desc.get("land", "allstates")}'
