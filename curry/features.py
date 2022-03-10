@@ -73,10 +73,10 @@ class Extractor:
         if vec_type == 'kw':
             content_vec = self.keywords(contents)
             return hstack([content_vec, land_vec_sparse]).tocsr()
-        if vec_type == 'babel_kw':
+        if vec_type == 'babelkw':
             content_vec = self.babelfy_kws(contents)
             return hstack([content_vec, land_vec_sparse]).tocsr()
-        if vec_type == 'wiki_kw':
+        if vec_type == 'wikikw':
             content_vec = self.wikifier_kws(contents)
             return hstack([content_vec, land_vec_sparse]).tocsr()
         elif vec_type == 'st':
