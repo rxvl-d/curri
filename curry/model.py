@@ -15,6 +15,7 @@ from curry.loader import Loader
 class Scorer:
     confusion_matrix = 'confusion_matrix'
     accuracy = 'accuracy'
+    empty = {confusion_matrix: None, accuracy: -1.0}
     all = [confusion_matrix, accuracy]
 
     @classmethod
@@ -189,11 +190,15 @@ class Trainer:
         clf = getattr(Models, model_name)(*args)
         X, y = self.get_X_y(vec_type, filter_multi_grade, land)
         scores = []
-        folder = StratifiedKFold(n_splits=3)
-        for train_index, test_index in folder.split(X, y):
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
-            clf.fit(X_train, y_train)
-            score = clf.score(X_test, y_test)
-            scores.append(score)
-        return self.aggregate_scores(scores)
+        try:
+            folder = StratifiedKFold(n_splits=3)
+            for train_index, test_index in folder.split(X, y):
+                X_train, X_test = X[train_index], X[test_index]
+                y_train, y_test = y[train_index], y[test_index]
+                clf.fit(X_train, y_train)
+                score = clf.score(X_test, y_test)
+                scores.append(score)
+            return self.aggregate_scores(scores)
+        except Exception as e:
+            logging.error(e)
+            Scorer.empty
