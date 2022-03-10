@@ -1,3 +1,4 @@
 [
-  {"name": "xgbClassifier", "args": [10], "vec_type":  "babelkw+wikikw", "filtered": true}
+  {"name": "xgbClassifier", "args": [10], "vec_type":  "babelkw+wikikw", "filtered": true},
+  {"name": "xgbClassifier", "args": [10], "vec_type":  "babelkw+st", "filtered": true}
 ]

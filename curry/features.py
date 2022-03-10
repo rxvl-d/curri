@@ -83,19 +83,25 @@ class Extractor:
             raise Exception("Boom!")
         return content_vec
 
+    def concatenate_hetero_arrays(self, arrs):
+        types = set(map(type, arrs))
+        if types == {csr_matrix}:
+            return hstack(arrs).tocsr()
+        elif types == {csr_matrix, np.ndarray}:
+            to_concatenate = [(arr if type(arr) == csr_matrix else csr_matrix(arr)) for arr in arrs]
+            return hstack(to_concatenate).tocsr()
+        else:
+            raise Exception(f"Unexpected combination of array types {types}")
+
     def join(self, contents, lands, vec_type):
         if '+' in vec_type:
-            content_vecs = [self.content_vecs(contents, v) for v in vec_type.split('+')]
-            content_vec = hstack(content_vecs).tocsr()
+            vecs = [self.content_vecs(contents, v) for v in vec_type.split('+')]
         else:
-            content_vec = self.content_vecs(contents, vec_type)
+            vecs = [self.content_vecs(contents, vec_type)]
         land_vec_sparse = self.land_one_hot(lands)
-        if type(content_vec) == csr_matrix:
-            return hstack([content_vec, land_vec_sparse]).tocsr()
-        elif type(content_vec) == np.ndarray:
-            return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
-        else:
-            raise Exception(f"Unexpected content_vec type: {type(content_vec)}")
+        vecs.append(land_vec_sparse)
+        return self.concatenate_hetero_arrays(vecs)
+
 
 class SentenceTransformer:
     @cache_file('.sentence_transformer.cache')
