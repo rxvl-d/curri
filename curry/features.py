@@ -1,6 +1,6 @@
 import numpy as np
 import yake
-from scipy.sparse import hstack
+from scipy.sparse import hstack, csr_matrix
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
@@ -68,23 +68,28 @@ class Extractor:
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
 
-    def join(self, contents, lands, vec_type):
-        land_vec_sparse = self.land_one_hot(lands)
+    def content_vecs(self, contents, vec_type):
         if vec_type == 'kw':
             content_vec = self.keywords(contents)
-            return hstack([content_vec, land_vec_sparse]).tocsr()
-        if vec_type == 'babelkw':
+        elif vec_type == 'babelkw':
             content_vec = self.babelfy_kws(contents)
-            return hstack([content_vec, land_vec_sparse]).tocsr()
-        if vec_type == 'wikikw':
+        elif vec_type == 'wikikw':
             content_vec = self.wikifier_kws(contents)
-            return hstack([content_vec, land_vec_sparse]).tocsr()
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(contents)
-            return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
         elif vec_type == 'tfidf':
             content_vec = self.tfidf(contents)
+        else:
+            raise Exception("Boom!")
+        return content_vec
+
+    def join(self, contents, lands, vec_type):
+        land_vec_sparse = self.land_one_hot(lands)
+        content_vec = self.content_vecs(contents, vec_type)
+        if type(content_vec) == csr_matrix:
             return hstack([content_vec, land_vec_sparse]).tocsr()
+        elif type(content_vec) == np.ndarray:
+            return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
         else:
             raise Exception("Boom!")
 
