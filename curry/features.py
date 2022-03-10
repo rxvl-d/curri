@@ -80,7 +80,7 @@ class Extractor:
         elif vec_type == 'tfidf':
             content_vec = self.tfidf(contents)
         else:
-            raise Exception("Boom!")
+            raise Exception(f"Unknown vector type: {vec_type}")
         return content_vec
 
     def concatenate_hetero_arrays(self, arrs):
