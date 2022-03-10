@@ -84,14 +84,18 @@ class Extractor:
         return content_vec
 
     def join(self, contents, lands, vec_type):
+        if '+' in vec_type:
+            content_vecs = [self.content_vecs(contents, v) for v in vec_type.split('+')]
+            content_vec = hstack(content_vecs).tocsr()
+        else:
+            content_vec = self.content_vecs(contents, vec_type)
         land_vec_sparse = self.land_one_hot(lands)
-        content_vec = self.content_vecs(contents, vec_type)
         if type(content_vec) == csr_matrix:
             return hstack([content_vec, land_vec_sparse]).tocsr()
         elif type(content_vec) == np.ndarray:
             return np.concatenate([content_vec, land_vec_sparse.todense()], axis=1)
         else:
-            raise Exception("Boom!")
+            raise Exception(f"Unexpected content_vec type: {type(content_vec)}")
 
 class SentenceTransformer:
     @cache_file('.sentence_transformer.cache')
