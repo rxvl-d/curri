@@ -165,11 +165,11 @@ class Trainer:
         df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
         selected_ilocs = list(set(selected_land_ilocs).intersection(selected_land_ilocs))
         X = self.extractor.join(df.content, df.land if land else None, vec_type)
-        y = df.klass.astype('category').cat.codes.values
+        y = df.klass
         if selected_ilocs:
-            return X[selected_ilocs], y[selected_ilocs]
+            return X[selected_ilocs], y.iloc[selected_ilocs].astype('category').cat.codes.values
         else:
-            return X, y
+            return X, y.astype('category').cat.codes.values
 
     def aggregate_scores(self, scores):
         out = dict()
@@ -190,15 +190,11 @@ class Trainer:
         clf = getattr(Models, model_name)(*args)
         X, y = self.get_X_y(vec_type, filter_multi_grade, land)
         scores = []
-        try:
-            folder = StratifiedKFold(n_splits=3)
-            for train_index, test_index in folder.split(X, y):
-                X_train, X_test = X[train_index], X[test_index]
-                y_train, y_test = y[train_index], y[test_index]
-                clf.fit(X_train, y_train)
-                score = clf.score(X_test, y_test)
-                scores.append(score)
-            return self.aggregate_scores(scores)
-        except Exception as e:
-            logging.error(e)
-            return Scorer.empty
+        folder = StratifiedKFold(n_splits=3)
+        for train_index, test_index in folder.split(X, y):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test)
+            scores.append(score)
+        return self.aggregate_scores(scores)
