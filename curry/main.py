@@ -1,5 +1,7 @@
 import sys
 
+from tqdm import tqdm
+
 sys.path.append('.')
 import logging
 
@@ -15,7 +17,7 @@ class Runner:
         self.trainer = Trainer(data_dir)
 
     def run(self, job_descs):
-        for job_desc in job_descs:
+        for job_desc in tqdm(job_descs):
             result = self.trainer.train_score(job_desc)
             ConsoleWriter.write(job_desc, result)
             yield job_desc, result
