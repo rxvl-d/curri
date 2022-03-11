@@ -13,8 +13,8 @@ from curry.wikifier import Wikifier
 
 
 class Extractor:
-    def __init__(self, cleaner='tf'):
-        self.cleaner = Cleaner(cleaner)
+    def __init__(self):
+        self.cleaner = Cleaner()
         self.wikifier = Wikifier()
         self.babelfier = Babelfier()
 
