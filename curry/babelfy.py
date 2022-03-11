@@ -1,19 +1,19 @@
+import logging
 import os
+import pickle
 import socket
-from functools import lru_cache
 from urllib import error
 from urllib.error import HTTPError
 
 import backoff
 from babelpy.babelfy import BabelfyClient
-from tqdm import tqdm
-import pickle
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
+
 def fatal_code(e):
     return 400 <= e.status < 500
+
 
 class Babelfier():
     def __init__(self):
@@ -45,7 +45,7 @@ class Babelfier():
                 out = self.babel_client.entities
             except HTTPError as e:
                 if e.code == 414:
-                    out = self.bab(text[:len(text)//2]) + self.bab(text[len(text)//2:])
+                    out = self.bab(text[:len(text) // 2]) + self.bab(text[len(text) // 2:])
                 else:
                     logging.error("Unexpected Failure but continuing. Failed text here: /tmp/unexpected_failure")
                     with open('/tmp/unexpected_failure', 'w') as f:
