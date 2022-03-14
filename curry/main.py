@@ -1,17 +1,14 @@
 import sys
+sys.path.append('.')
 
 from tqdm import tqdm
-
-from curry.features import SentenceTransformer
-
-sys.path.append('.')
 import logging
-
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 import json
 import argparse
 from curry.model import Trainer
 from curry.results import ConsoleWriter, FileWriter
+from curry.features import SentenceTransformer
 
 
 class Runner:
