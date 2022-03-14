@@ -159,7 +159,7 @@ class Models:
 class Trainer:
     def __init__(self, data_dir):
         self.loader = Loader(data_dir)
-        self.extractor = Extractor()
+        self.extractor = Extractor(data_dir + '/cache')
 
     def get_X_y(self, vec_type, filter_multi_grade, land):
         df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
