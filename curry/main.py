@@ -29,7 +29,7 @@ def parse(args):
     parser = argparse.ArgumentParser(description='Train Level Prediction.')
     parser.add_argument('job', type=str)
     parser.add_argument('data_dir', type=str)
-    parser.add_argument('job_desc', type=str, default=None, required=False)
+    parser.add_argument('--job_desc', type=str, default=None, required=False)
     args = parser.parse_args(args)
     if args.job == 'train':
         with open(args.job_desc) as f:
@@ -41,6 +41,8 @@ def parse(args):
 
 def main(args):
     parsed_args, job_descs = parse(args)
+    print(parsed_args, job_descs)
+    sys.exit(0)
     if args.job == 'train':
         results = Runner(
             data_dir=parsed_args.data_dir
