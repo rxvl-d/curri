@@ -2,16 +2,13 @@ import logging
 import pickle
 
 import numpy as np
-import yake
+from nltk.corpus import stopwords
 from scipy.sparse import hstack, csr_matrix
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder
-from tqdm import tqdm
-from nltk.corpus import stopwords
 
 from curry.babelfy import Babelfier
 from curry.clean import Cleaner
-from curry.utils import cache_file
 from curry.wikifier import Wikifier
 from curry.yakekw import Yaker
 
@@ -54,20 +51,21 @@ class Extractor:
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
 
-    def content_vecs(self, contents, urls, vec_type):
+    def content_vecs(self, urls, vec_type):
+        features = None
         if vec_type == 'kw':
-            content_vec = self.keywords(urls)
+            content_vec, features = self.keywords(urls)
         elif vec_type == 'babelkw':
-            content_vec = self.babelfy_kws(urls)
+            content_vec, features = self.babelfy_kws(urls)
         elif vec_type == 'wikikw':
-            content_vec = self.wikifier_kws(urls)
+            content_vec, features = self.wikifier_kws(urls)
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(urls)
         elif vec_type == 'tfidf':
-            content_vec = self.tfidf(urls)
+            content_vec, features = self.tfidf(urls)
         else:
             raise Exception(f"Unknown vector type: {vec_type}")
-        return content_vec
+        return content_vec, features
 
     def concatenate_hetero_arrays(self, arrs):
         types = set(map(type, arrs))
@@ -79,15 +77,22 @@ class Extractor:
         else:
             raise Exception(f"Unexpected combination of array types {types}")
 
-    def join(self, contents, urls, lands, vec_type):
+    def join(self, urls, lands, vec_type):
+        feature_names = dict()
+        vecs = []
         if '+' in vec_type:
-            vecs = [self.content_vecs(contents, urls, v) for v in vec_type.split('+')]
+            for component_vec_type in vec_type.split('+'):
+                content_vec, features = self.content_vecs(urls, component_vec_type)
+                vecs.append(content_vec)
+                feature_names[component_vec_type] = features
         else:
-            vecs = [self.content_vecs(contents, urls, vec_type)]
+            content_vec, features = self.content_vecs(urls, vec_type)
+            vecs.append(content_vec)
+            feature_names[vec_type] = features
         if lands is not None:
             land_vec_sparse = self.land_one_hot(lands)
             vecs.append(land_vec_sparse)
-        return self.concatenate_hetero_arrays(vecs)
+        return self.concatenate_hetero_arrays(vecs), feature_names
 
     def count_vectorize(self, keywords):
         vectorizer = CountVectorizer(lowercase=False, tokenizer=lambda x: x)
@@ -125,3 +130,9 @@ class SentenceTransformer:
     def write_cache(self):
         with open(self.cache_dir + 'sentence_transformers.cache', 'wb') as f:
             pickle.dump(self.run(), f)
+
+    def cached_vecs(self, urls):
+        with open(self.cache_dir + 'cleaned_content.cache', 'rb') as f:
+            cache = pickle.load(f)
+            return [cache[url] for url in urls]
+

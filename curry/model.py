@@ -163,13 +163,20 @@ class Trainer:
 
     def get_X_y(self, vec_type, filter_multi_grade, land):
         df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
-        selected_ilocs = list(set(selected_land_ilocs).intersection(selected_land_ilocs))
-        X = self.extractor.join(df.content, df.grundwissen_url, df.land if land else None, vec_type)
+        if selected_lesson_ilocs and selected_land_ilocs:
+            selected_ilocs = list(set(selected_lesson_ilocs).intersection(set(selected_land_ilocs)))
+        elif type(selected_lesson_ilocs) is list:
+            selected_ilocs = selected_lesson_ilocs
+        elif type(selected_land_ilocs) is list:
+            selected_ilocs = selected_land_ilocs
+        else:
+            selected_ilocs = None
+        X, feature_names = self.extractor.join(df.grundwissen_url, df.land if land else None, vec_type)
         y = df.klass
         if selected_ilocs:
             return X[selected_ilocs], y.iloc[selected_ilocs].astype('category').cat.codes.values
         else:
-            return X, y.astype('category').cat.codes.values
+            return X, y.astype('category').cat.codes.values, feature_names
 
     def aggregate_scores(self, scores):
         out = dict()
@@ -188,13 +195,29 @@ class Trainer:
         args = job_desc['args']
         land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
-        X, y = self.get_X_y(vec_type, filter_multi_grade, land)
+        X, y, feature_names = self.get_X_y(vec_type, filter_multi_grade, land)
+        feature_scorer = FeatureScorer(feature_names)
         scores = []
         folder = StratifiedKFold(n_splits=3)
         for train_index, test_index in folder.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
+            feature_scorer.register(clf)
             score = clf.score(X_test, y_test)
             scores.append(score)
         return self.aggregate_scores(scores)
+
+
+class FeatureScorer:
+    def __init__(self, feature_names):
+        self.feature_names = feature_names
+        self.feature_name_f_mapping = {fn: f'f'}
+
+    def register(self, model):
+        raw_scores = model.get_booster().get_score(importance_type='weight', fmap='')
+
+    def other(self):
+        pass
+        # sorted_scores = sorted(raw_scores, key=lambda x: x[1], reverse=True)
+        # feature_scores = FeatureScorer.register()
