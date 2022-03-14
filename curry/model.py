@@ -164,7 +164,7 @@ class Trainer:
     def get_X_y(self, vec_type, filter_multi_grade, land):
         df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
         selected_ilocs = list(set(selected_land_ilocs).intersection(selected_land_ilocs))
-        X = self.extractor.join(df.content, df.land if land else None, vec_type)
+        X = self.extractor.join(df.content, df.grundwissen_url, df.land if land else None, vec_type)
         y = df.klass
         if selected_ilocs:
             return X[selected_ilocs], y.iloc[selected_ilocs].astype('category').cat.codes.values

@@ -16,7 +16,8 @@ def fatal_code(e):
 
 
 class Babelfier():
-    def __init__(self):
+    def __init__(self, cache_dir):
+        self.cache_dir = cache_dir
         self.api_key = os.getenv("BABELFY_KEY")
         self.babel_client = BabelfyClient(self.api_key)
         self.cache_file = '.babelfier_bab.cache'
@@ -54,3 +55,24 @@ class Babelfier():
             self.cache[text] = out
             self.write_cache(self.cache)
             return out
+
+    def bab_cached(self, urls):
+        with open(self.cache_dir + 'babelfied.cache', 'rb') as f:
+            babelfy_cache = pickle.load(f)
+            return [babelfy_cache[url] for url in urls]
+
+    def bnid_to_description_map(self):
+        out = dict()
+        with open(self.cache_dir + 'babelfied.cache', 'rb') as f:
+            babelfy_cache = pickle.load(f)
+            for annotations in babelfy_cache.values():
+                for annotation in annotations:
+                    dbpedia = annotation.get('DBpediaURL')
+                    text = annotation['text']
+                    bab_id = annotation['babelSynsetID']
+                    if out.get(bab_id) is None:
+                        out[bab_id] = {'dbpedia': {dbpedia}, 'text': {text}}
+                    else:
+                        out[bab_id]['dbpedia'].add(dbpedia)
+                        out[bab_id]['text'].add(text)
+        return out

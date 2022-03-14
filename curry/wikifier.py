@@ -1,4 +1,5 @@
 import os
+import pickle
 import socket
 from functools import lru_cache
 from urllib import parse, request, error
@@ -6,7 +7,8 @@ import json
 import backoff
 
 class Wikifier:
-    def __init__(self):
+    def __init__(self, cache_dir):
+        self.cache_dir = cache_dir
         self.user_key = os.getenv("WIKIFIER_KEY")
         self.wikifier_root = "http://www.wikifier.org/"
         self.max_text_size = 10000
@@ -53,6 +55,7 @@ class Wikifier:
     def wikify_threshold(self, text, threshold):
         return {'annotations': list(filter(lambda a: a['pageRank'] > threshold, self.wikify(text)['annotations']))}
 
-def test():
-    w = Wikifier()
-    return w.wikify("A right isoceles triangle has a hypotenuse of 20 feet. What are the lengths of the legs of the triangle?")
+    def wikify_cached(self, urls):
+        with open(self.cache_dir + 'wikified.cache', 'rb') as f:
+            wikify_cache = pickle.load(f)
+            return [wikify_cache[url] for url in urls]
