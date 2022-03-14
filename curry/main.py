@@ -41,12 +41,12 @@ def parse(args):
 
 def main(args):
     parsed_args, job_descs = parse(args)
-    if args.job == 'train':
+    if parsed_args.job == 'train':
         results = Runner(
             data_dir=parsed_args.data_dir
         ).run_train(job_descs)
         FileWriter.write(list(results))
-    elif args.job == 'gen_st':
+    elif parsed_args.job == 'gen_st':
         Runner(parsed_args.data_dir).run_sentence_transformers()
 
 
