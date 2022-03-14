@@ -41,8 +41,6 @@ def parse(args):
 
 def main(args):
     parsed_args, job_descs = parse(args)
-    print(parsed_args, job_descs)
-    sys.exit(0)
     if args.job == 'train':
         results = Runner(
             data_dir=parsed_args.data_dir
