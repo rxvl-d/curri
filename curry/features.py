@@ -1,3 +1,4 @@
+import json
 import logging
 import pickle
 
@@ -25,7 +26,7 @@ class Extractor:
         return self.cleaner.clean_cached(urls)
 
     def keywords(self, urls):
-        return self.count_vectorize([self.yake.kw_cache(url) for url in urls])
+        return self.count_vectorize(self.yake.kw_cache(urls))
 
     def sentence_transformers(self, urls):
         return self.sentence_transformer.cached_vecs(urls)
@@ -37,9 +38,11 @@ class Extractor:
 
     def babelfy_kws(self, urls):
         threshold = 0.5
-        return self.count_vectorize(
+        vecs, bnids = self.count_vectorize(
             [[a['babelSynsetID'] for a in annotations if a['score'] > threshold]
              for annotations in self.babelfier.bab_cached(urls)])
+        bnid_to_description_map = self.babelfier.bnid_to_description_map()
+        return vecs, [json.dumps(bnid_to_description_map[bnid], cls=SetEncoder) for bnid in bnids]
 
     def wikifier_kws(self, urls):
         threshold = 0.01
@@ -76,23 +79,6 @@ class Extractor:
             return hstack(to_concatenate).tocsr()
         else:
             raise Exception(f"Unexpected combination of array types {types}")
-
-    def join(self, urls, lands, vec_type):
-        feature_names = dict()
-        vecs = []
-        if '+' in vec_type:
-            for component_vec_type in vec_type.split('+'):
-                content_vec, features = self.content_vecs(urls, component_vec_type)
-                vecs.append(content_vec)
-                feature_names[component_vec_type] = features
-        else:
-            content_vec, features = self.content_vecs(urls, vec_type)
-            vecs.append(content_vec)
-            feature_names[vec_type] = features
-        if lands is not None:
-            land_vec_sparse = self.land_one_hot(lands)
-            vecs.append(land_vec_sparse)
-        return self.concatenate_hetero_arrays(vecs), feature_names
 
     def count_vectorize(self, keywords):
         vectorizer = CountVectorizer(lowercase=False, tokenizer=lambda x: x)
@@ -136,3 +122,9 @@ class SentenceTransformer:
             cache = pickle.load(f)
             return [cache[url] for url in urls]
 
+
+class SetEncoder(json.JSONEncoder):
+   def default(self, obj):
+      if isinstance(obj, set):
+         return list(obj)
+      return json.JSONEncoder.default(self, obj)

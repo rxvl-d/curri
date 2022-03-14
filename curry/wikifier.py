@@ -56,6 +56,6 @@ class Wikifier:
         return {'annotations': list(filter(lambda a: a['pageRank'] > threshold, self.wikify(text)['annotations']))}
 
     def wikify_cached(self, urls):
-        with open(self.cache_dir + 'wikified.cache', 'rb') as f:
+        with open(self.cache_dir + '/wikified.cache', 'rb') as f:
             wikify_cache = pickle.load(f)
             return [wikify_cache[url] for url in urls]

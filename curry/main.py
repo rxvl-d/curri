@@ -18,8 +18,9 @@ class Runner:
 
     def run_train(self, job_descs):
         for job_desc in tqdm(job_descs):
-            result = self.trainer.train_score(job_desc)
+            result, top_features = self.trainer.train_score(job_desc)
             ConsoleWriter.write(job_desc, result)
+            FileWriter.write_features(job_desc, top_features)
             yield job_desc, result
 
     def run_sentence_transformers(self):

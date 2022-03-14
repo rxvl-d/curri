@@ -21,12 +21,17 @@ class FileWriter:
         if not os.path.isdir('results'):
             os.mkdir('results')
         for job_desc, score in results:
-            with open('results/' + result_file_name(job_desc) + ".confusion_matrix", 'w') as f:
+            with open('results/' + result_file_name(job_desc) + "_confusion_matrix.txt", 'w') as f:
                 f.write(str(score[Scorer.confusion_matrix]))
         accuracies = [(result_file_name(model_desc), score[Scorer.accuracy]) for model_desc, score in results]
         with open("results/accuracies", 'a') as f:
             for model_name, acc in accuracies:
                 f.write(f"{model_name}\t{acc}\n")
+
+    @classmethod
+    def write_features(cls, job_desc, top_features):
+        with open('results/' + result_file_name(job_desc) + "_top_features.txt", 'w') as f:
+            f.write('\n'.join(top_features))
 
 
 def result_file_name(job_desc):

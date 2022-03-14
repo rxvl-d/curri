@@ -67,12 +67,15 @@ class Babelfier():
             babelfy_cache = pickle.load(f)
             for annotations in babelfy_cache.values():
                 for annotation in annotations:
-                    dbpedia = annotation.get('DBpediaURL')
+                    dbpedia = annotation.get('DBpediaURL') or None
                     text = annotation['text']
                     bab_id = annotation['babelSynsetID']
                     if out.get(bab_id) is None:
-                        out[bab_id] = {'dbpedia': {dbpedia}, 'text': {text}}
+                        out[bab_id] = {'dbpedia': set(), 'text': {text}}
+                        if dbpedia:
+                            out[bab_id]['dbpedia'].add(dbpedia)
                     else:
-                        out[bab_id]['dbpedia'].add(dbpedia)
+                        if dbpedia:
+                            out[bab_id]['dbpedia'].add(dbpedia)
                         out[bab_id]['text'].add(text)
         return out

@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pandas as pd
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
@@ -45,6 +46,9 @@ class _XGBClassifier:
     def score(self, X, y):
         y_pred = self.clf.predict(X)
         return Scorer.score(y, y_pred)
+
+    def get_feature_scores(self):
+        return self.clf.get_booster().get_score(importance_type='weight', fmap='')
 
 
 class _XGBMultilabelClassifer:
@@ -171,12 +175,15 @@ class Trainer:
             selected_ilocs = selected_land_ilocs
         else:
             selected_ilocs = None
-        X, feature_names = self.extractor.join(df.grundwissen_url, df.land if land else None, vec_type)
+        X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type)
+        if feature_names is None:
+            raise Exception("No support for un interpretable features right now.")
         y = df.klass
         if selected_ilocs:
-            return X[selected_ilocs], y.iloc[selected_ilocs].astype('category').cat.codes.values
+            filtered = X[selected_ilocs], y.iloc[selected_ilocs]
         else:
-            return X, y.astype('category').cat.codes.values, feature_names
+            filtered =  X, y
+        return filtered[0], filtered[1].astype('category').cat.codes.values, feature_names
 
     def aggregate_scores(self, scores):
         out = dict()
@@ -206,18 +213,19 @@ class Trainer:
             feature_scorer.register(clf)
             score = clf.score(X_test, y_test)
             scores.append(score)
-        return self.aggregate_scores(scores)
+        return self.aggregate_scores(scores), feature_scorer.most_informative_features()
 
 
 class FeatureScorer:
     def __init__(self, feature_names):
         self.feature_names = feature_names
-        self.feature_name_f_mapping = {fn: f'f'}
+        self.raw_scores = []
 
     def register(self, model):
-        raw_scores = model.get_booster().get_score(importance_type='weight', fmap='')
+        raw_scores = model.get_feature_scores()
+        self.raw_scores.append(raw_scores)
 
-    def other(self):
-        pass
-        # sorted_scores = sorted(raw_scores, key=lambda x: x[1], reverse=True)
-        # feature_scores = FeatureScorer.register()
+    def most_informative_features(self):
+        features = pd.DataFrame(self.raw_scores).mean(axis=0).sort_values(ascending=False).index
+        feature_indexes = [self.feature_names[int(f.replace('f', ''))] for f in features]
+        return feature_indexes
