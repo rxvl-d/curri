@@ -118,7 +118,7 @@ class SentenceTransformer:
             pickle.dump(self.run(), f)
 
     def cached_vecs(self, urls):
-        with open(self.cache_dir + 'cleaned_content.cache', 'rb') as f:
+        with open(self.cache_dir + 'sentence_transformers.cache', 'rb') as f:
             cache = pickle.load(f)
             return [cache[url] for url in urls]
 

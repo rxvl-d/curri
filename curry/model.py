@@ -127,9 +127,9 @@ class Models:
                 'nthread': nthreads}
 
     @classmethod
-    def xgbClassifier(self, nthreads):
+    def xgbClassifier(self, nthreads, num_class=9):
         params = Models.xgb_params(nthreads)
-        params['num_class'] = 9
+        params['num_class'] = num_class
         params['objective'] = 'multi:softmax'
         params['eval_metric'] = 'merror'
         return _XGBClassifier(params)
@@ -203,6 +203,9 @@ class Trainer:
         land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
         X, y, feature_names = self.get_X_y(vec_type, filter_multi_grade, land)
+        return self.kfold(clf, X, y, feature_names)
+
+    def kfold(self, clf, X, y, feature_names):
         feature_scorer = FeatureScorer(feature_names)
         scores = []
         folder = StratifiedKFold(n_splits=3)
@@ -226,6 +229,8 @@ class FeatureScorer:
         self.raw_scores.append(raw_scores)
 
     def most_informative_features(self):
+        if self.feature_names is None:
+            return None
         features = pd.DataFrame(self.raw_scores).mean(axis=0).sort_values(ascending=False).index
         feature_indexes = [self.feature_names[int(f.replace('f', ''))] for f in features]
         return feature_indexes
