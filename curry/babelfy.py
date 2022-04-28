@@ -57,9 +57,12 @@ class Babelfier():
             return out
 
     def bab_cached(self, urls):
+        babelfy_cache = self.get_cache()
+        return [babelfy_cache[url] for url in urls]
+
+    def get_cache(self):
         with open(self.cache_dir + '/babelfied.cache', 'rb') as f:
-            babelfy_cache = pickle.load(f)
-            return [babelfy_cache[url] for url in urls]
+            return pickle.load(f)
 
     def bnid_to_description_map(self):
         out = dict()
