@@ -165,25 +165,15 @@ class Trainer:
         self.loader = Loader(data_dir)
         self.extractor = Extractor(data_dir + '/cache')
 
-    def get_X_y(self, vec_type, filter_multi_grade, land):
-        df, selected_lesson_ilocs, selected_land_ilocs = self.loader.sublessons_w_content(filter_multi_grade, land)
-        if selected_lesson_ilocs and selected_land_ilocs:
-            selected_ilocs = list(set(selected_lesson_ilocs).intersection(set(selected_land_ilocs)))
-        elif type(selected_lesson_ilocs) is list:
-            selected_ilocs = selected_lesson_ilocs
-        elif type(selected_land_ilocs) is list:
-            selected_ilocs = selected_land_ilocs
-        else:
-            selected_ilocs = None
+    def get_X_y(self, vec_type, land):
+        df = self.loader.simple()
+        if land:
+            df = df[df.land == land]
         X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type)
         if feature_names is None:
             raise Exception("No support for un interpretable features right now.")
         y = df.klass
-        if selected_ilocs:
-            filtered = X[selected_ilocs], y.iloc[selected_ilocs]
-        else:
-            filtered =  X, y
-        return filtered[0], filtered[1].astype('category').cat.codes.values, feature_names
+        return X, y.astype('category').cat.codes.values, feature_names
 
     def aggregate_scores(self, scores):
         out = dict()
@@ -198,11 +188,10 @@ class Trainer:
         logging.info(f"train_score: {job_desc}")
         model_name = job_desc['name']
         vec_type = job_desc['vec_type']
-        filter_multi_grade = job_desc['filtered']
         args = job_desc['args']
         land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
-        X, y, feature_names = self.get_X_y(vec_type, filter_multi_grade, land)
+        X, y, feature_names = self.get_X_y(vec_type, land)
         return self.kfold(clf, X, y, feature_names)
 
     def kfold(self, clf, X, y, feature_names):
