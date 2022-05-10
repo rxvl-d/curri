@@ -31,6 +31,11 @@ class Loader:
         with open(self.data_dir + 'grundwissen_pages/' + url.replace('/', 'SLASH')) as f:
             return f.read()
 
+    def simple(self):
+        df = self.sublessons()
+        df['content'] = df.grundwissen_url.apply(self.read_file)
+        return df
+
     def sublessons_w_content(self, filter_multi_grade, land):
         df = self.sublessons()
         if filter_multi_grade:

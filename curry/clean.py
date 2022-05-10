@@ -3,6 +3,7 @@ import pickle
 import readabilipy
 import trafilatura
 
+from curry.structure import get_structured_text_content
 
 class Cleaner:
     def __init__(self, cache_dir):
@@ -27,6 +28,9 @@ class Cleaner:
             if line in main_content:
                 main_lines.append(line)
         return self.remove_equations(main_lines)
+
+    def clean_custom(self, html_content):
+        return get_structured_text_content(html_content)
 
     def clean_cached(self, urls):
         with open(self.cache_dir + 'cleaned_content.cache', 'rb') as f:
