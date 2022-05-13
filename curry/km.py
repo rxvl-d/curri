@@ -7,6 +7,29 @@ from tqdm import tqdm
 from curry.babelfy import Babelfier
 from curry.wikifier import Wikifier
 
+class DBPediaPhysicsResourceFilter:
+    def __init__(self, cache_dir='../data/cache/'):
+        with open(cache_dir + 'categories_depth_5_v2.pkl', 'rb') as f:
+            self.categories = pickle.load(f)
+
+    def __call__(self, *args, **kwargs):
+        resource_iri = args[0]
+        c = self.categories.get(resource_iri, [])
+        return ('http://dbpedia.org/resource/Category:Subfields_of_physics' in c) or \
+               ('http://dbpedia.org/resource/Category:Physics' in c) or \
+               ('http://dbpedia.org/resource/Category:Concepts_in_physics' in c) or \
+               ('http://dbpedia.org/resource/Category:Physical_sciences' in c) or \
+               ('http://dbpedia.org/resource/Category:Electromagnetism' in c) or \
+               ('http://dbpedia.org/resource/Category:Electrical_engineering' in c) or \
+               ('http://dbpedia.org/resource/Category:Physical_quantities' in c) or \
+               ('http://dbpedia.org/resource/Category:Universe' in c) or \
+               ('http://dbpedia.org/resource/Category:Metrology' in c) or \
+               ('http://dbpedia.org/resource/Category:Classical_mechanics' in c) or \
+               ('http://dbpedia.org/resource/Category:Engineering_disciplines' in c) or \
+               ('http://dbpedia.org/resource/Category:Applied_and_interdisciplinary_physics' in c) or \
+               ('http://dbpedia.org/resource/Category:Applied_sciences' in c) or \
+               ('http://dbpedia.org/resource/Category:Engineering_disciplines' in c)
+
 
 class DBPediaPhysicsResources:
     def __init__(self, data_dir='../data/'):

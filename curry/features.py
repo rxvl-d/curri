@@ -12,6 +12,7 @@ from curry.babelfy import Babelfier
 from curry.clean import Cleaner
 from curry.wikifier import Wikifier
 from curry.yakekw import Yaker
+from curry.km import DBPediaPhysicsResourceFilter
 
 
 class Extractor:
@@ -21,6 +22,7 @@ class Extractor:
         self.babelfier = Babelfier(cache_dir)
         self.sentence_transformer = SentenceTransformer(cache_dir)
         self.yake = Yaker(cache_dir)
+        self.is_physics = DBPediaPhysicsResourceFilter(cache_dir)
 
     def cleaned_content(self, urls):
         return self.cleaner.clean_cached(urls)
@@ -36,32 +38,52 @@ class Extractor:
         out = vectorizer.fit_transform(self.cleaned_content(urls))
         return out, vectorizer.get_feature_names_out()
 
-    def babelfy_kws(self, urls):
-        threshold = 0.5
-        vecs, bnids = self.count_vectorize(
-            [[a['babelSynsetID'] for a in annotations if a['score'] > threshold]
-             for annotations in self.babelfier.bab_cached(urls)])
+    def babelfy_kws(self, urls, threshold, only_physics):
+        def satisfactory(annotation):
+            if annotation['score'] < threshold:
+                return False
+            elif only_physics:
+                if annotation.get('DBpediaURL'):
+                    return self.is_physics(annotation['DBpediaURL'])
+                else:
+                    return False
+            else:
+                return True
+
+        synset_ids = [[a['babelSynsetID'] for a in annotations if satisfactory(a)]
+                      for annotations in self.babelfier.bab_cached(urls)]
+        vecs, bnids = self.count_vectorize(synset_ids)
         bnid_to_description_map = self.babelfier.bnid_to_description_map()
         return vecs, [json.dumps(bnid_to_description_map[bnid], cls=SetEncoder) for bnid in bnids]
 
-    def wikifier_kws(self, urls):
-        threshold = 0.01
+    def wikifier_kws(self, urls, threshold, only_physics):
+        def satisfactory(annotation):
+            if annotation['pageRank'] < threshold:
+                return False
+            elif only_physics:
+                if annotation.get('dbPediaIri'):
+                    return self.is_physics(annotation['dbPediaIri'])
+                else:
+                    return False
+            else:
+                return True
+
         return self.count_vectorize(
-            [[a['title'] for a in wikified['annotations'] if a['pageRank'] > threshold]
+            [[a['title'] for a in wikified['annotations'] if satisfactory(a)]
              for wikified in self.wikifier.wikify_cached(urls)])
 
     def land_one_hot(self, lands):
         one_hot = OneHotEncoder()
         return one_hot.fit_transform([[l] for l in lands])
 
-    def content_vecs(self, urls, vec_type):
+    def content_vecs(self, urls, vec_type, args):
         features = None
         if vec_type == 'kw':
             content_vec, features = self.keywords(urls)
         elif vec_type == 'babelkw':
-            content_vec, features = self.babelfy_kws(urls)
+            content_vec, features = self.babelfy_kws(urls, *args)
         elif vec_type == 'wikikw':
-            content_vec, features = self.wikifier_kws(urls)
+            content_vec, features = self.wikifier_kws(urls, *args)
         elif vec_type == 'st':
             content_vec = self.sentence_transformers(urls)
         elif vec_type == 'tfidf':
@@ -120,7 +142,7 @@ class SentenceTransformer:
     def cached_vecs(self, urls):
         with open(self.cache_dir + 'sentence_transformers.cache', 'rb') as f:
             cache = pickle.load(f)
-            return [cache[url] for url in urls]
+            return np.array([cache[url] for url in urls])
 
 
 class SetEncoder(json.JSONEncoder):

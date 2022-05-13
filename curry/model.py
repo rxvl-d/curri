@@ -163,15 +163,13 @@ class Models:
 class Trainer:
     def __init__(self, data_dir):
         self.loader = Loader(data_dir)
-        self.extractor = Extractor(data_dir + '/cache')
+        self.extractor = Extractor(data_dir + '/cache/')
 
-    def get_X_y(self, vec_type, land):
+    def get_X_y(self, vec_type, vec_type_args, land):
         df = self.loader.simple()
         if land:
             df = df[df.land == land]
-        X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type)
-        if feature_names is None:
-            raise Exception("No support for un interpretable features right now.")
+        X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type, vec_type_args)
         y = df.klass
         return X, y.astype('category').cat.codes.values, feature_names
 
@@ -188,10 +186,11 @@ class Trainer:
         logging.info(f"train_score: {job_desc}")
         model_name = job_desc['name']
         vec_type = job_desc['vec_type']
+        vec_type_args = job_desc['vec_type_args']
         args = job_desc['args']
         land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
-        X, y, feature_names = self.get_X_y(vec_type, land)
+        X, y, feature_names = self.get_X_y(vec_type, vec_type_args, land)
         return self.kfold(clf, X, y, feature_names)
 
     def kfold(self, clf, X, y, feature_names):
