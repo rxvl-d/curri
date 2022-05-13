@@ -117,6 +117,8 @@ class _XGBOrdinalClassifer:
         _, indexed_y = np.unique(y, return_inverse=True)
         return Scorer.score(indexed_y, self.predict(X))
 
+    def get_feature_scores(self):
+        return None
 
 class Models:
     @classmethod
@@ -127,7 +129,7 @@ class Models:
                 'nthread': nthreads}
 
     @classmethod
-    def xgbClassifier(self, nthreads, num_class=9):
+    def xgbClassifier(self, nthreads, num_class):
         params = Models.xgb_params(nthreads)
         params['num_class'] = num_class
         params['objective'] = 'multi:softmax'
@@ -210,14 +212,19 @@ class Trainer:
 class FeatureScorer:
     def __init__(self, feature_names):
         self.feature_names = feature_names
+        self.model_has_feature_scores = True
         self.raw_scores = []
 
     def register(self, model):
         raw_scores = model.get_feature_scores()
+        if raw_scores is None:
+            self.model_has_feature_scores = False
         self.raw_scores.append(raw_scores)
 
     def most_informative_features(self):
         if self.feature_names is None:
+            return None
+        if not self.model_has_feature_scores:
             return None
         features = pd.DataFrame(self.raw_scores).mean(axis=0).sort_values(ascending=False).index
         feature_indexes = [self.feature_names[int(f.replace('f', ''))] for f in features]
