@@ -167,12 +167,14 @@ class Trainer:
         self.loader = Loader(data_dir)
         self.extractor = Extractor(data_dir + '/cache/')
 
-    def get_X_y(self, vec_type, vec_type_args, land):
+    def get_X_y(self, vec_type, vec_type_args, land, is_coarse):
         df = self.loader.simple()
         if land:
             df = df[df.land == land]
         X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type, vec_type_args)
         y = df.klass
+        if is_coarse:
+            y = y.apply(lambda x: 'Primary' if x<=5 else ('Sec-I' if x <=10 else 'Sec-II'))
         return X, y.astype('category').cat.codes.values, feature_names
 
     def aggregate_scores(self, scores):
@@ -189,10 +191,11 @@ class Trainer:
         model_name = job_desc['name']
         vec_type = job_desc['vec_type']
         vec_type_args = job_desc['vec_type_args']
+        is_coarse = job_desc['is_coarse']
         args = job_desc['args']
         land = job_desc.get('land')
         clf = getattr(Models, model_name)(*args)
-        X, y, feature_names = self.get_X_y(vec_type, vec_type_args, land)
+        X, y, feature_names = self.get_X_y(vec_type, vec_type_args, land, is_coarse)
         return self.kfold(clf, X, y, feature_names)
 
     def kfold(self, clf, X, y, feature_names):
