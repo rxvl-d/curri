@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 
 from curry.features import Extractor
 from curry.loader import Loader
@@ -166,12 +166,18 @@ class Trainer:
     def __init__(self, data_dir):
         self.loader = Loader(data_dir)
         self.extractor = Extractor(data_dir + '/cache/')
+        self.onehot = OneHotEncoder()
 
     def get_X_y(self, vec_type, vec_type_args, land, is_coarse):
         df = self.loader.simple()
         if land:
             df = df[df.land == land]
         X, feature_names = self.extractor.content_vecs(df.grundwissen_url, vec_type, vec_type_args)
+        if land is None:
+            state = self.onehot.fit_transform(df.land.astype('category').cat.codes.values.reshape(-1, 1))
+            X = self.extractor.concatenate_hetero_arrays([X, state])
+            feature_names = None
+
         y = df.klass
         if is_coarse:
             y = y.apply(lambda x: 'Primary' if x<=5 else ('Sec-I' if x <=10 else 'Sec-II'))
