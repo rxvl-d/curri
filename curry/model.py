@@ -16,14 +16,25 @@ from curry.loader import Loader
 class Scorer:
     confusion_matrix = 'confusion_matrix'
     accuracy = 'accuracy'
+    approx_accuracy = 'approx_accuracy'
     empty = {confusion_matrix: None, accuracy: -1.0}
-    all = [confusion_matrix, accuracy]
+    all = [confusion_matrix, accuracy, approx_accuracy]
+
+    @classmethod
+    def approximate_accuracy(cls, y_true, y_pred, threshold=1):
+        accurate = 0
+        for (t, p) in zip(y_true, y_pred):
+            # print(f"({p} <= {t} + {threshold}) and ({p} >= {t} - {threshold})")
+            if (p <= t + threshold) and (p >= t - threshold):
+                accurate += 1
+        return accurate / len(y_true)
 
     @classmethod
     def score(self, y_true, y_pred):
         return {
             Scorer.confusion_matrix: confusion_matrix(y_true, y_pred),
-            Scorer.accuracy: accuracy_score(y_true, y_pred)
+            Scorer.accuracy: accuracy_score(y_true, y_pred),
+            Scorer.approx_accuracy: self.approximate_accuracy(y_true, y_pred)
         }
 
     @classmethod
@@ -31,6 +42,8 @@ class Scorer:
         if score_type == Scorer.confusion_matrix:
             return np.sum(np.array(score_values), axis=0)
         elif score_type == Scorer.accuracy:
+            return np.mean(score_values)
+        elif score_type == Scorer.approx_accuracy:
             return np.mean(score_values)
         else:
             raise Exception("Unimplemented!")
