@@ -71,9 +71,12 @@ class _XGBMultilabelClassifer:
     def fit(self, X, y):
         self.clf.fit(X, y)
 
+    def predict(self, X):
+        return self.clf.predict(X)
+
     def score(self, X, y):
         y_pred = self.clf.predict(X)
-        return Scorer.score(y, y_pred)
+        return accuracy_score(y, y_pred)
 
 class _XGBCoarseGrained:
     def __init__(self, params, bins):
